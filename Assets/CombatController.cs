@@ -9,15 +9,18 @@ public class CombatController : MonoBehaviour {
     public bool Blocking = false;
     public enum ActionDirection { ActionRight, ActionLeft, ActionOverhead }
 
-    public enum ActionState { AttackRightState, AttackLeftState, AttackOverheadState, IdleState }
-    public ActionState currentActionState = ActionState.IdleState;
+    public enum BlockState { BlockStateRight, BlockStateLeft, BlockStateOverhead, IdleState }
+    public BlockState currentBlockState = BlockState.IdleState;
+
+    public enum CombatState { Blocking, Attacking, Idle}
+    public CombatState currentState = CombatState.Idle;
 
     public LayerMask Hitlayer;
     public CombatController Opponent;
 
     void Start () {
         m_Animator = GetComponent<Animator>();
-        currentActionState = ActionState.IdleState;
+        currentBlockState = BlockState.IdleState;
     }
 	
 	// Update is called once per frame
@@ -27,44 +30,49 @@ public class CombatController : MonoBehaviour {
         m_Animator.SetTrigger("Hit");
     }
 
-    public void Attack(ActionDirection currentAction)
+    public void Action(ActionDirection currentAction)
     {
-        switch (currentAction)
+        if (currentState == CombatState.Idle)
         {
-            case ActionDirection.ActionRight:
-                m_Animator.SetTrigger("ActionRight");
-                break;
-            case ActionDirection.ActionLeft:
-                m_Animator.SetTrigger("ActionLeft");
-                break;
-            case ActionDirection.ActionOverhead:
-                m_Animator.SetTrigger("ActionOverhead");
-                break;
+            currentState = Blocking ? CombatState.Blocking : CombatState.Attacking;
+
+            switch (currentAction)
+            {
+                case ActionDirection.ActionRight:
+                    m_Animator.SetTrigger("ActionRight");
+                    break;
+                case ActionDirection.ActionLeft:
+                    m_Animator.SetTrigger("ActionLeft");
+                    break;
+                case ActionDirection.ActionOverhead:
+                    m_Animator.SetTrigger("ActionOverhead");
+                    break;
+            }
         }
     }
 
-    public void EnableAttack(ActionState aState)
+    public void EnableAttack()
     {
+        currentState = CombatState.Attacking;
         GetComponentInChildren<Weapon>().SetAttackState(true);
-        currentActionState = aState;
     }
 
     public void DisableAttack()
     {
         GetComponentInChildren<Weapon>().SetAttackState(false);
-        currentActionState = ActionState.IdleState;
     }
 
-    public void SetBlockState(ActionState aState)
+    public void SetBlockState(BlockState bState)
     {
-        currentActionState = aState;
+        currentState = CombatState.Blocking;
+        currentBlockState = bState;
     }
 
-    public void CheckForBlock(ActionState aState)
+    public void CheckForBlock(BlockState bState)
     {
-        Debug.Log(Opponent.currentActionState);
-        Debug.Log(currentActionState);
-        if (Opponent.Blocking && Opponent.currentActionState == currentActionState)
+        Debug.Log(Opponent.currentBlockState);
+        Debug.Log(bState);
+        if (Opponent.Blocking && Opponent.currentBlockState == bState)
         {
             AttackInterrupt();
         }
@@ -89,6 +97,11 @@ public class CombatController : MonoBehaviour {
         //}
     }
 
+    public void ResetCombatState()
+    {
+        currentState = CombatState.Idle;
+    }
+
     public void AttackInterrupt()
     {
         m_Animator.SetTrigger("AttackInterrupt");
@@ -108,4 +121,9 @@ public class CombatController : MonoBehaviour {
         }
     }
 
+    public void SetBlocking(bool value)
+    {
+        Blocking = value;
+        m_Animator.SetBool("Blocking", Blocking);
+    }
 }

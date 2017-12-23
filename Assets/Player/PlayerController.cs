@@ -10,6 +10,11 @@ public class PlayerController : MonoBehaviour {
     public Slider HealthSlider;
     Camera camera;
 
+    public Image SwordImage;
+    public Image ShieldImage;
+
+    bool BlockingValue = true;
+
     public void TakeDamage(int damage)
     {
         //   Debug.Log(this.name + " is taking damage");
@@ -22,6 +27,10 @@ public class PlayerController : MonoBehaviour {
         enemy = FindObjectOfType<Enemy>();
         combatController = GetComponent<CombatController>();
         camera = GetComponentInChildren<Camera>();
+
+
+        SwordImage.gameObject.SetActive(BlockingValue);
+        ShieldImage.gameObject.SetActive(!BlockingValue);
     }
 
     // Update is called once per frame
@@ -30,20 +39,29 @@ public class PlayerController : MonoBehaviour {
 
         if (Input.GetButtonDown("ActionRight"))
         {
-            combatController.Attack(CombatController.ActionDirection.ActionRight);
+            combatController.Action(CombatController.ActionDirection.ActionRight);
         }
         if (Input.GetButtonDown("ActionLeft"))
         {
-            combatController.Attack(CombatController.ActionDirection.ActionLeft);
+            combatController.Action(CombatController.ActionDirection.ActionLeft);
         }
         if (Input.GetButtonDown("ActionOverhead"))
         {
-            combatController.Attack(CombatController.ActionDirection.ActionOverhead);
+            combatController.Action(CombatController.ActionDirection.ActionOverhead);
         }
         if (Input.GetButtonDown("BlockToggle"))
         {
+            BlockingValue = !BlockingValue;
+
+            SwordImage.gameObject.SetActive(BlockingValue);
+            ShieldImage.gameObject.SetActive(!BlockingValue);
             combatController.ToggleBlocking();
         }
+    }
+
+    public void AttackEnemyMessage(CombatController.ActionDirection AttackDirection)
+    {
+        enemy.AttackedFrom(AttackDirection);
     }
 
     private void OnDrawGizmos()
